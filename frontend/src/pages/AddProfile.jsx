@@ -117,7 +117,6 @@ const AddProfile = ({ backendURL }) => {
                                 placeholder="C:\Users\Documents\dog.jpg"
                                 value={formData.photo_full_path}
                                 onChange={handleChange}
-                                required
                             />
                             <small>Paste the absolute path to your image.</small>
                         </div>

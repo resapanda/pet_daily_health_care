@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 
-const PetPhoto = ({ profileId, backendURL, defaultImage }) => {
+const PetPhoto = ({ profileId, backendURL, defaultImage, className = "profile-img-large", alt = "Pet Profile" }) => {
     const [imageSrc, setImageSrc] = useState(null);
     const [loading, setLoading] = useState(true);
 
@@ -39,8 +39,8 @@ const PetPhoto = ({ profileId, backendURL, defaultImage }) => {
         <div className="profile-photo-container">
             <img 
                 src={imageSrc || defaultImage} 
-                alt="Pet Profile" 
-                className="profile-img-large" 
+                alt={alt}
+                className={className}
             />
         </div>
     );

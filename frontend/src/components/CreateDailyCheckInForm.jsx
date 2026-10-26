@@ -1,6 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import React, { useState } from 'react';
 import "../CreateHealthForm.css";
+import PetPhoto from '../components/PetPhoto';
 
 const INITIAL_FORM_STATE = {
     create_daily_checkin_pet_id: '',
@@ -76,8 +77,14 @@ const CreateDailyCheckInForm = ({ profiles = [], backendURL }) => {
                                 key={profile.profile_id} 
                                 className={`pet-avatar-item ${formData.create_daily_checkin_pet_id == profile.profile_id ? 'selected' : ''}`}
                                 onClick={() => setFormData(prev => ({ ...prev, create_daily_checkin_pet_id: profile.profile_id }))}
-                              >
-                                <img src={profile.photo_url || DEFAULT_PET_IMAGE} className="pet-thumb-large" alt={profile.name} />
+                              > 
+                                <PetPhoto 
+                                    profileId={profile.profile_id} 
+                                    backendURL={backendURL} 
+                                    defaultImage={DEFAULT_PET_IMAGE}
+                                    className="pet-thumb-large"
+                                    alt={profile.name}
+                                />
                                 <span className="pet-avatar-name">{profile.name}</span>
                             </div>
                         ))}

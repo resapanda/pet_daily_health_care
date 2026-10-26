@@ -38,7 +38,7 @@ TABLE Profiles (
     gender VARCHAR(10) NOT NULL CHECK (gender IN ('boy', 'girl')),
     age INT CHECK (age >= 0),
     breed VARCHAR(100) DEFAULT 'Mixed Breed',
-    type VARCHAR(10) DEFAULT 'dog',
+    type VARCHAR(10) DEFAULT 'dog' CHECK (type IN ('dog', 'cat'),
     weight DECIMAL(5, 2) CHECK (weight > 0),
     unit VARCHAR(10) DEFAULT 'lb',
     notification_id INT,

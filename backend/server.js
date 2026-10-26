@@ -50,8 +50,6 @@ app.post('/webhook', (req, res) => {
 
     console.log(`\n Notification for User ${user_id}: ${message}`);
 
-    // Even though the request came in on 5123, 
-    // we emit the socket event through the 'io' instance on 9971
     io.emit("new_notification", {
         userId: user_id,
         title: title,
@@ -63,6 +61,7 @@ app.post('/webhook', (req, res) => {
 
 // MICROSERVICE
 app.post('/api/convert', asyncHandler(async (req, res) => {
+    console.log("Calling Unit Conversion Service : ", req.body)
     const response = await axios.post(`${UNIT_SERVICE_URL}/convert-unit`, req.body);
     res.json(response.data);
 }));
@@ -76,7 +75,7 @@ app.get('/api/daily-goal/:profileId', asyncHandler(async (req, res) => {
     const pet = profiles[0];
 
     // validation for checking type
-    const species = (pet.pet_type || pet.type || 'dog').toLowerCase();
+    const species = (pet.type || 'dog').toLowerCase();
 
     // convert weight to kg if it's currently in lb
     let weightInKg = pet.weight; 
@@ -85,10 +84,11 @@ app.get('/api/daily-goal/:profileId', asyncHandler(async (req, res) => {
     }
 
     const payload = {
-        species: pet.type.toLowerCase(),
+        species: species,
         weight: weightInKg
     };
 
+    console.log("Calling Diet Calculation Service : ", payload)
     const response = await axios.post(`${DIET_CALCULATION_URL}/calculate/calories`, payload);
     res.json({
         daily_target: response.data.daily_caloric_target
@@ -110,6 +110,7 @@ app.get('/api/profile/:id/photo', asyncHandler(async function (req, res) {
 
         const fileId = rows[0].file_id;
 
+        console.log("Calling File Service with URL parameter(fileId): ", fileId)
         const response = await axios.get(`${FILE_SERVICE_URL}/get-file/${fileId}`);
         
         const imageExtension = response.data.type; 
@@ -241,8 +242,7 @@ app.post('/profile/create', asyncHandler(async function (req, res) {
         data.create_profile_type,
         data.create_profile_breed,
         data.create_profile_weight,
-        data.create_profile_unit,
-        data.create_profile_photo
+        data.create_profile_unit
     ]);
 
     const [idRows] = await db.query("SELECT @new_id AS new_id;");
@@ -275,6 +275,7 @@ app.post('/profile/create', asyncHandler(async function (req, res) {
                 type: fileType
             };
 
+            console.log("Calling File Service: ", fileServicePayload)
             const response = await axios.post(`${FILE_SERVICE_URL}/register-file`, fileServicePayload);
             const fileId = response.data.fileId;
 
@@ -310,7 +311,8 @@ app.post('/profile/create', asyncHandler(async function (req, res) {
                 notify_at: unixTimestamp,
                 interval_seconds: 86400 // 24hrs
             };
-    
+
+            console.log("Calling Notifications Service: ", microservicePayload)
             const response= await axios.post(`${NOTIFICATION_SERVICE_URL}/notification`, microservicePayload);
             const notificationId = response.data.notification_id;
             
@@ -411,6 +413,7 @@ app.delete('/profile/delete', asyncHandler(async function (req, res) {
     if (rows.length > 0 && rows[0].notification_id) {
         const notifId = rows[0].notification_id;
         try {
+            console.log("Calling Notification Service with URL parameter : ", notifId)
             await axios.delete(`${NOTIFICATION_SERVICE_URL}/notification/${notifId}`);
             console.log(`Successfully cancelled notification ID: ${notifId}`);
         } catch (microserviceError) {
@@ -485,8 +488,7 @@ app.use((err, req, res, next) => {
 // ########## LISTENER
 
 server.listen(PORT, () => {
-    console.log(`Unified Server running on http://localhost:${PORT}`);
-    console.log(`- React API: http://localhost:${PORT}`);
+    console.log(`Server running on http://localhost:${PORT}`);
     console.log(`- Webhook: http://localhost:${PORT}/webhook`);
     console.log(`- Sockets: http://localhost:${PORT}`);
 });

@@ -1,0 +1,85 @@
+@startuml
+skinparam Style strictuml
+skinparam SequenceMessageAlignment center
+
+
+participant "Client App" as User
+participant "Account Service" as API
+database "SQLite Database" as DB
+
+== 1. Account Creation ==
+
+User -> API : POST /accounts\n{username, password}
+activate API
+
+API -> DB : Insert into DB
+activate DB
+
+alt Username Unique
+    DB --> API : Success (Row Created)
+    API --> User : 201 Created
+else Username Exists
+    DB --> API : sqlite3.IntegrityError\n (username isn't unique)
+    API --> User : 400 Bad Request
+end
+deactivate DB
+deactivate API
+
+
+== 2. Login ==
+
+
+User -> API : POST /login\n{username, password}
+activate API
+
+API -> DB : Get user
+activate DB
+DB --> API : Returns ID, Hashed Pwd
+deactivate DB
+
+
+alt Credentials Correct
+    API -> API : Generate JWT
+    API --> User : 200 OK + JWT
+else Credentials Invalid
+    API --> User : 401 Unauthorized
+end
+deactivate API
+
+
+== 3. Change Password ==
+
+User -> API : PUT /accounts/{user}/change_password\nHeader: Authorization: Bearer <token>\nBody: {old_pwd, new_pwd}
+activate API
+
+alt Missing Header or Malformed Format
+    API --> User : 401 Unauthorized
+else
+    API -> API : Decode & Validate JWT
+    
+    alt Token Valid & Sub == {user}
+        API -> DB : Get user
+        activate DB
+        DB --> API : Returns Stored Hashed Pwd
+        deactivate DB
+    else Token Expired or Token Invalid
+        API --> User : 401 Unauthorized
+        
+        alt Old Password Matches
+            API -> API : Hash new_password
+            API -> DB : Update password
+            activate DB
+            DB --> API : Success
+            deactivate DB
+            API --> User : 200 OK
+        else Old Password Wrong
+            API --> User : 401 Unauthorized
+        end
+        
+    else Subject Mismatch
+        API --> User : 403 Forbidden
+    end
+end
+
+deactivate API
+@enduml

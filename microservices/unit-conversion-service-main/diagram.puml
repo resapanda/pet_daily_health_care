@@ -1,0 +1,35 @@
+@startuml
+skinparam SequenceMessageAlignment center
+
+participant "Client App" as User
+participant "Conversion Service" as API
+
+
+== 1. Unit Conversion ==
+
+User -> API : POST /convert-unit\n{value, from_unit, to_unit}
+activate API
+
+alt Valid Units (kg, lb, g, oz)
+    API -> API : Calculate using Conversion Constant
+    API --> User : 200 OK converted successfully
+else Invalid Units or Missing Data
+    API --> User : 400 Bad Request
+end
+deactivate API
+
+== 2. Time Conversion ==
+
+User -> API : POST /convert-time\n{twelveHourTime OR twentyFourHourTime}
+activate API
+
+alt Format matches expected pattern
+    API -> API : Parse date
+    API --> User : 200 OK converted successfully
+else Both/Neither field provided OR Invalid format
+    API --> User : 400 Bad Request
+    
+end
+deactivate API
+
+@enduml
